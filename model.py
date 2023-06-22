@@ -16,9 +16,11 @@ from numpy import inf
 import pandas as pd
 from keras import Input
 from keras.layers import Dense
+import time
+
 
 #Loading mat file containing data
-Map = '4'
+Map = '5'
 loadpath = r'C:\Users\panh3\Desktop\Rosbag3\map' + Map + '\mapdata' + Map + '.mat'
 mappath = r'C:\Users\panh3\Desktop\Rosbag3\map' + Map + '\map' + Map + '.png'
 mat = scipy.io.loadmat(loadpath)
@@ -107,9 +109,12 @@ lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2)
 optimizer = tf.keras.optimizers.Nadam(learning_rate = 5E-5)
 model.compile(optimizer,loss = 'mean_squared_error'  , metrics=['mae', 'mse'])
 
+
+training_start_time = time.time()
 history = model.fit([df_ranges], [df_pose], 
                      epochs = epochsnum, batch_size=batch_sizenum,
                      verbose=1, validation_split=0.3 ,callbacks=[lr_scheduler])
+training_finish_time = time.time()
 
 prediction = model.predict([df_ranges_val])
 df_pred = pd.DataFrame(data=prediction, columns = pos_label)
@@ -141,6 +146,7 @@ scipy.io.savemat(savepath, mdict)
 
 
 # Use model to predict validation data 
+print('Training finished, took {:.2f}s'.format(training_finish_time - training_start_time))
 print("Prediction mean error: " + str(error.mean()))
 print("AMCL mean error: " + str(amcl_error.mean()))
 
@@ -201,6 +207,7 @@ ascat.title.set_text("Mapping predicted values x and y")
 plt.colorbar(a1, label = 'error [meters]')  
 ascat.legend(loc='lower right')
 figscat.savefig(dirpath + r"\scatterplot.png")      
+
 
 # Show the plot
 plt.show()
